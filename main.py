@@ -29,7 +29,7 @@ puzzle = [
 # Variabel untuk menyimpan posisi sel yang dipilih
 selected_row = -1
 selected_col = -1
-
+game_won = False
 
 # Fungsi untuk menggambar grid
 def draw_grid():
@@ -63,6 +63,22 @@ def draw_selected_cell():
             (selected_col * 60, selected_row * 60, 60, 60), 3  # Posisi dan ukuran kotak
         )
 
+def display_win_message():
+    if game_won:
+        font = pygame.font.Font(None, 60)
+        text = font.render("Selamat, Anda menang!", True, (0, 128, 0))
+        text_rect = text.get_rect(center=(300, 300))  # Posisikan di tengah layar
+        screen.blit(text, text_rect)
+
+def check_win(puzzle):
+    for row in range(9):
+        for col in range(9):
+            num = puzzle[row][col]
+            # Cek apakah ada sel kosong atau angka tidak valid
+            if num == 0 or not is_valid(puzzle, row, col, num):
+                return False
+    return True
+
 def is_valid(puzzle, row, col, num):
     # Cek baris
     for i in range(9):
@@ -93,14 +109,19 @@ while running:
             selected_row = y // 60
             selected_col = x // 60
         elif event.type == pygame.KEYDOWN:
-            if selected_row != -1 and selected_col != -1:
+            if not game_won and selected_row != -1 and selected_col != -1:
                 if event.unicode.isdigit() and event.unicode != '0':  # Cek input 1-9
                     num = int(event.unicode)
-                    # Cek apakah angka valid untuk dimasukkan
                     if is_valid(puzzle, selected_row, selected_col, num):
                         puzzle[selected_row][selected_col] = num
+
+                        # Cek apakah sudah menang
+                        if check_win(puzzle):
+                            print("Selamat! Anda telah menyelesaikan Sudoku!")
+                            game_won = True  # Update status game
                     else:
                         print("Angka tidak valid di posisi ini!")
+
 
         if event.type == pygame.QUIT:
             running = False
@@ -117,6 +138,8 @@ while running:
     # Gambar sel yang dipilih
     draw_selected_cell()
 
+    # Tampilkan pesan kemenangan jika sudah menang
+    display_win_message()
 
     # Update layar
     pygame.display.flip()

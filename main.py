@@ -107,6 +107,7 @@ def reset_game():
     game_won = False  # Set game_won ke False
     selected_row = -1  # Hapus pilihan sel
     selected_col = -1
+    print("Game di-reset. selected_row dan selected_col di-reset ke -1.")
 
 def draw_reset_button():
     font = pygame.font.Font(None, 40)
@@ -124,8 +125,18 @@ running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if reset_button.collidepoint(pygame.mouse.get_pos()):
+            pos = pygame.mouse.get_pos()
+            
+            # Cek apakah klik berada di tombol Reset
+            if reset_button.collidepoint(pos):
                 reset_game()
+                print("Tombol Reset diklik.")
+            
+            # Jika game belum selesai dan klik bukan di tombol Reset, cek pilihan sel
+            elif not game_won:
+                selected_row = pos[1] // 60
+                selected_col = pos[0] // 60
+
         elif event.type == pygame.KEYDOWN:
             if not game_won and selected_row != -1 and selected_col != -1:
                 if event.unicode.isdigit() and event.unicode != '0':  # Cek input 1-9

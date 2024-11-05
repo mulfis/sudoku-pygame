@@ -63,6 +63,26 @@ def draw_selected_cell():
             (selected_col * 60, selected_row * 60, 60, 60), 3  # Posisi dan ukuran kotak
         )
 
+def is_valid(puzzle, row, col, num):
+    # Cek baris
+    for i in range(9):
+        if puzzle[row][i] == num:
+            return False
+
+    # Cek kolom
+    for i in range(9):
+        if puzzle[i][col] == num:
+            return False
+
+    # Cek kotak 3x3
+    box_start_row = (row // 3) * 3
+    box_start_col = (col // 3) * 3
+    for i in range(3):
+        for j in range(3):
+            if puzzle[box_start_row + i][box_start_col + j] == num:
+                return False
+
+    return True
 
 # Loop utama
 running = True
@@ -75,8 +95,12 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if selected_row != -1 and selected_col != -1:
                 if event.unicode.isdigit() and event.unicode != '0':  # Cek input 1-9
-                    puzzle[selected_row][selected_col] = int(event.unicode)
-
+                    num = int(event.unicode)
+                    # Cek apakah angka valid untuk dimasukkan
+                    if is_valid(puzzle, selected_row, selected_col, num):
+                        puzzle[selected_row][selected_col] = num
+                    else:
+                        print("Angka tidak valid di posisi ini!")
 
         if event.type == pygame.QUIT:
             running = False

@@ -14,7 +14,7 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
 # Puzzle contoh (0 berarti sel kosong)
-puzzle = [
+initial_puzzle = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
     [0, 9, 8, 0, 0, 0, 0, 6, 0],
@@ -25,6 +25,7 @@ puzzle = [
     [0, 0, 0, 4, 1, 9, 0, 0, 5],
     [0, 0, 0, 0, 8, 0, 0, 7, 9]
 ]
+puzzle = [row[:] for row in initial_puzzle]  # Buat salinan untuk game
 
 # Variabel untuk menyimpan posisi sel yang dipilih
 selected_row = -1
@@ -100,14 +101,31 @@ def is_valid(puzzle, row, col, num):
 
     return True
 
+def reset_game():
+    global puzzle, game_won, selected_row, selected_col
+    puzzle = [row[:] for row in initial_puzzle]  # Salin ulang puzzle awal
+    game_won = False  # Set game_won ke False
+    selected_row = -1  # Hapus pilihan sel
+    selected_col = -1
+
+def draw_reset_button():
+    font = pygame.font.Font(None, 40)
+    text = font.render("Reset", True, (255, 255, 255))
+    text_rect = text.get_rect(center=(300, 580))  # Posisikan di bawah grid
+
+    # Gambar kotak tombol
+    pygame.draw.rect(screen, (0, 0, 255), (200, 550, 200, 60))  # Kotak biru
+    screen.blit(text, text_rect)
+
+    return pygame.Rect(200, 550, 200, 60)  # Kembalikan objek tombol
+
 # Loop utama
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
-            x, y = pygame.mouse.get_pos()
-            selected_row = y // 60
-            selected_col = x // 60
+            if reset_button.collidepoint(pygame.mouse.get_pos()):
+                reset_game()
         elif event.type == pygame.KEYDOWN:
             if not game_won and selected_row != -1 and selected_col != -1:
                 if event.unicode.isdigit() and event.unicode != '0':  # Cek input 1-9
@@ -141,9 +159,11 @@ while running:
     # Tampilkan pesan kemenangan jika sudah menang
     display_win_message()
 
+    # Gambar tombol Reset
+    reset_button = draw_reset_button()
+
     # Update layar
     pygame.display.flip()
-
 
 # Tutup Pygame
 pygame.quit()

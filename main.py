@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 # Inisialisasi Pygame
 pygame.init()
@@ -13,19 +14,130 @@ pygame.display.set_caption("Sudoku Game")
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+def generate_sudoku():
+    # Buat papan kosong
+    puzzle = [[0 for _ in range(9)] for _ in range(9)]
+    
+    # Angka yang akan digunakan diacak
+    numbers = list(range(1, 10))
+    random.shuffle(numbers)
+
+    # Isi baris pertama dengan angka acak
+    for col in range(9):
+        puzzle[0][col] = numbers[col]
+    
+    # Isi papan secara rekursif
+    fill_puzzle(puzzle)
+    return puzzle
+
+def is_valid(puzzle, row, col, num):
+    # Cek baris
+    for c in range(9):
+        if puzzle[row][c] == num:
+            return False
+    
+    # Cek kolom
+    for r in range(9):
+        if puzzle[r][col] == num:
+            return False
+    
+    # Cek kotak 3x3
+    box_row_start = (row // 3) * 3
+    box_col_start = (col // 3) * 3
+    for r in range(3):
+        for c in range(3):
+            if puzzle[box_row_start + r][box_col_start + c] == num:
+                return False
+    
+    return True
+
+def fill_puzzle(puzzle):
+    for row in range(9):
+        for col in range(9):
+            if puzzle[row][col] == 0:  # Temukan sel kosong
+                # Coba angka dari 1 hingga 9
+                for num in range(1, 10):
+                    if is_valid(puzzle, row, col, num):
+                        puzzle[row][col] = num  # Tempatkan angka
+                        if fill_puzzle(puzzle):  # Rekursi
+                            return True
+                        puzzle[row][col] = 0  # Kembali jika tidak berhasil
+                return False
+    return True  # Jika semua sel terisi
+    
+def can_solve(puzzle):
+    # Cek apakah ada solusi untuk puzzle yang diberikan
+    for row in range(9):
+        for col in range(9):
+            if puzzle[row][col] == 0:
+                for num in range(1, 10):
+                    if is_valid(puzzle, row, col, num):
+                        puzzle[row][col] = num
+                        if can_solve(puzzle):
+                            return True
+                        puzzle[row][col] = 0  # Kembali jika tidak berhasil
+                return False  # Jika tidak ada angka valid yang bisa digunakan
+    return True  # Jika semua sel terisi
+
+def remove_numbers(puzzle, num_to_remove=40):
+    attempts = num_to_remove
+    while attempts > 0:
+        row = random.randint(0, 8)
+        col = random.randint(0, 8)
+        if puzzle[row][col] != 0:
+            backup = puzzle[row][col]
+            puzzle[row][col] = 0  # Hapus angka sementara
+            
+            # Salin puzzle untuk pengujian
+            puzzle_copy = [r[:] for r in puzzle]
+            
+            # Pastikan puzzle masih bisa diselesaikan dan memiliki solusi tunggal
+            if not has_unique_solution(puzzle_copy) or not can_solve(puzzle_copy):
+                puzzle[row][col] = backup  # Kembalikan angka jika solusi tidak unik
+            else:
+                attempts -= 1
+                
+    return puzzle
+
+def solve_and_count(puzzle, count=0):
+    for row in range(9):
+        for col in range(9):
+            if puzzle[row][col] == 0:
+                for num in range(1, 10):
+                    if is_valid(puzzle, row, col, num):
+                        puzzle[row][col] = num
+                        count = solve_and_count(puzzle, count)
+                        puzzle[row][col] = 0
+                        if count > 1:  # Lebih dari satu solusi
+                            return count
+                return count  # Jika tidak ada solusi, kembalikan count sekarang
+    return count + 1  # Menambah count ketika solusi ditemukan
+
+def has_unique_solution(puzzle):
+    return solve_and_count(puzzle) == 1
+
+def shuffle_board(puzzle):
+    # Fungsi untuk mengacak baris dan kolom dalam blok 3x3
+    for i in range(0, 9, 3):
+        rows = [i, i + 1, i + 2]
+        cols = [i, i + 1, i + 2]
+        random.shuffle(rows)
+        random.shuffle(cols)
+
+        # Tukar baris dan kolom secara acak dalam blok 3x3
+        puzzle[rows[0]], puzzle[rows[1]], puzzle[rows[2]] = (
+            puzzle[rows[1]], puzzle[rows[2]], puzzle[rows[0]]
+        )
+        for row in range(9):
+            puzzle[row][cols[0]], puzzle[row][cols[1]], puzzle[row][cols[2]] = (
+                puzzle[row][cols[1]], puzzle[row][cols[2]], puzzle[row][cols[0]]
+            )
+    return puzzle
+
 # Puzzle contoh (0 berarti sel kosong)
-initial_puzzle = [
-    [5, 3, 0, 0, 7, 0, 0, 0, 0],
-    [6, 0, 0, 1, 9, 5, 0, 0, 0],
-    [0, 9, 8, 0, 0, 0, 0, 6, 0],
-    [8, 0, 0, 0, 6, 0, 0, 0, 3],
-    [4, 0, 0, 8, 0, 3, 0, 0, 1],
-    [7, 0, 0, 0, 2, 0, 0, 0, 6],
-    [0, 6, 0, 0, 0, 0, 2, 8, 0],
-    [0, 0, 0, 4, 1, 9, 0, 0, 5],
-    [0, 0, 0, 0, 8, 0, 0, 7, 9]
-]
-puzzle = [row[:] for row in initial_puzzle]  # Buat salinan untuk game
+initial_puzzle = generate_sudoku()
+initial_puzzle = shuffle_board(initial_puzzle)
+puzzle = remove_numbers(initial_puzzle, num_to_remove=40)
 
 # Variabel untuk menyimpan posisi sel yang dipilih
 selected_row = -1
@@ -56,7 +168,6 @@ def draw_numbers():
                 text = font.render(str(num), True, BLACK)
                 screen.blit(text, (col * 60 + 20, row * 60 + 15))
 
-
 def draw_selected_cell():
     if selected_row != -1 and selected_col != -1:  # Jika ada sel yang dipilih
         pygame.draw.rect(
@@ -78,27 +189,6 @@ def check_win(puzzle):
             # Cek apakah ada sel kosong atau angka tidak valid
             if num == 0 or not is_valid(puzzle, row, col, num):
                 return False
-    return True
-
-def is_valid(puzzle, row, col, num):
-    # Cek baris
-    for i in range(9):
-        if puzzle[row][i] == num:
-            return False
-
-    # Cek kolom
-    for i in range(9):
-        if puzzle[i][col] == num:
-            return False
-
-    # Cek kotak 3x3
-    box_start_row = (row // 3) * 3
-    box_start_col = (col // 3) * 3
-    for i in range(3):
-        for j in range(3):
-            if puzzle[box_start_row + i][box_start_col + j] == num:
-                return False
-
     return True
 
 def reset_game():
@@ -138,19 +228,22 @@ while running:
                 selected_col = pos[0] // 60
 
         elif event.type == pygame.KEYDOWN:
+        # Logika input keyboard
             if not game_won and selected_row != -1 and selected_col != -1:
                 if event.unicode.isdigit() and event.unicode != '0':  # Cek input 1-9
                     num = int(event.unicode)
-                    if is_valid(puzzle, selected_row, selected_col, num):
-                        puzzle[selected_row][selected_col] = num
-
-                        # Cek apakah sudah menang
-                        if check_win(puzzle):
-                            print("Selamat! Anda telah menyelesaikan Sudoku!")
-                            game_won = True  # Update status game
-                    else:
-                        print("Angka tidak valid di posisi ini!")
-
+                    # Cek validitas angka yang dimasukkan
+                    if puzzle[selected_row][selected_col] == 0 or puzzle[selected_row][selected_col] != num:
+                        if is_valid(puzzle, selected_row, selected_col, num):
+                            puzzle[selected_row][selected_col] = num
+                            if check_win(puzzle):
+                                print("Selamat! Anda telah menyelesaikan Sudoku!")
+                                game_won = True
+                        else:
+                            print("Angka tidak valid di posisi ini!")
+                elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE:
+                    # Hapus angka di sel yang dipilih
+                    puzzle[selected_row][selected_col] = 0
 
         if event.type == pygame.QUIT:
             running = False

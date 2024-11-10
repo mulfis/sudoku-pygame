@@ -210,6 +210,8 @@ def draw_reset_button():
 
     return pygame.Rect(200, 550, 200, 60)  # Kembalikan objek tombol
 
+original_numbers = [row[:] for row in puzzle]
+
 # Loop utama
 running = True
 while running:
@@ -232,8 +234,7 @@ while running:
             if not game_won and selected_row != -1 and selected_col != -1:
                 if event.unicode.isdigit() and event.unicode != '0':  # Cek input 1-9
                     num = int(event.unicode)
-                    # Cek validitas angka yang dimasukkan
-                    if puzzle[selected_row][selected_col] == 0 or puzzle[selected_row][selected_col] != num:
+                    if original_numbers[selected_row][selected_col] == 0:  # Hanya isi sel yang kosong
                         if is_valid(puzzle, selected_row, selected_col, num):
                             puzzle[selected_row][selected_col] = num
                             if check_win(puzzle):
@@ -241,8 +242,8 @@ while running:
                                 game_won = True
                         else:
                             print("Angka tidak valid di posisi ini!")
-                elif event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE:
-                    # Hapus angka di sel yang dipilih
+                elif (event.key == pygame.K_BACKSPACE or event.key == pygame.K_DELETE) and original_numbers[selected_row][selected_col] == 0:
+                    # Hanya hapus angka jika angka tersebut bukan bagian dari angka awal
                     puzzle[selected_row][selected_col] = 0
 
         if event.type == pygame.QUIT:

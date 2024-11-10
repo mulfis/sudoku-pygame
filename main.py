@@ -13,6 +13,64 @@ pygame.display.set_caption("Sudoku Game")
 # Warna dasar
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GRAY = (200, 200, 200)
+DARK_GRAY = (100, 100, 100)
+
+# Pengaturan font
+font = pygame.font.Font(None, 50)
+
+def draw_button(text, x, y, width, height, color, hover_color, action=None):
+    """Gambar tombol di layar dan cek jika ditekan."""
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+
+    # Gambar tombol dengan efek hover
+    if x < mouse[0] < x + width and y < mouse[1] < y + height:
+        pygame.draw.rect(screen, hover_color, (x, y, width, height))
+        if click[0] == 1 and action:
+            action()
+    else:
+        pygame.draw.rect(screen, color, (x, y, width, height))
+
+    # Gambar teks di tombol
+    text_surface = font.render(text, True, BLACK)
+    text_rect = text_surface.get_rect(center=(x + width // 2, y + height // 2))
+    screen.blit(text_surface, text_rect)
+
+def exit_game():
+    """Fungsi untuk keluar dari game."""
+    pygame.quit()
+    sys.exit()
+
+def start_game():
+    """Fungsi untuk memulai game (keluar dari menu)."""
+    global running
+    running = True
+    pygame.event.post(pygame.event.Event(pygame.USEREVENT, {'start': True}))
+
+def main_menu():
+    """Tampilkan menu utama."""
+    menu_running = True
+    while menu_running:
+        screen.fill(WHITE)
+
+        # Gambar tombol Start
+        draw_button("Start", 170, 150, 200, 50, GRAY, DARK_GRAY, start_game)
+
+        # Gambar tombol Exit
+        draw_button("Exit", 170, 250, 200, 50, GRAY, DARK_GRAY, exit_game)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                menu_running = False
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.USEREVENT:
+                if event.dict.get('start', False):
+                    menu_running = False  # Keluar dari menu utama
+
+        # Perbarui layar
+        pygame.display.flip()
 
 def generate_sudoku():
     # Buat papan kosong
@@ -156,9 +214,6 @@ def draw_grid():
         # Garis horizontal
         pygame.draw.line(screen, BLACK, (0, i * 60), (screen_size, i * 60), line_width)
 
-# Pengaturan font untuk angka
-font = pygame.font.Font(None, 40)
-
 # Fungsi untuk menggambar angka di grid
 def draw_numbers():
     for row in range(9):
@@ -212,8 +267,10 @@ def draw_reset_button():
 
 original_numbers = [row[:] for row in puzzle]
 
+# Jalankan menu utama sebelum loop game
+main_menu()
+
 # Loop utama
-running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:

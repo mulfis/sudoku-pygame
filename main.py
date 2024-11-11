@@ -20,7 +20,7 @@ DARK_GRAY = (100, 100, 100)
 font = pygame.font.Font(None, 50)
 
 def draw_button(text, x, y, width, height, color, hover_color, action=None):
-    """Gambar tombol di layar dan cek jika ditekan."""
+    # Gambar tombol di layar dan cek jika ditekan.
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
 
@@ -38,18 +38,18 @@ def draw_button(text, x, y, width, height, color, hover_color, action=None):
     screen.blit(text_surface, text_rect)
 
 def exit_game():
-    """Fungsi untuk keluar dari game."""
+    # Fungsi untuk keluar dari game.
     pygame.quit()
     sys.exit()
 
 def start_game():
-    """Fungsi untuk memulai game (keluar dari menu)."""
+    # Fungsi untuk memulai game (keluar dari menu).
     global running
     running = True
     pygame.event.post(pygame.event.Event(pygame.USEREVENT, {'start': True}))
 
 def main_menu():
-    """Tampilkan menu utama."""
+    # Tampilkan menu utama.
     menu_running = True
     while menu_running:
         screen.fill(WHITE)
